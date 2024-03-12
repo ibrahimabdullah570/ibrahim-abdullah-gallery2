@@ -1,0 +1,28 @@
+<header>
+  <h1>Animal Kingdom</h1>
+  {{#if user}}
+  <div class="user-info">
+    <span class="username">{{user}}</span>
+    <a href="/logout" class="logout">Logout</a>
+  </div>
+  {{/if}}
+</header>
+
+<div class="gallery-container">
+    <div class="image-selection">
+        <form action="/display" method="POST">
+            {{#each images}}
+                <input type="radio" id="{{this.filename}}" name="image" value="{{this.filename}}">
+                <label for="{{this.filename}}">{{this.name}}</label>
+            {{/each}}
+            <button type="submit">Display Image</button>
+        </form>
+    </div>
+    <div class="image-display">
+        {{#if selectedImage}}
+            <img src="images/{{selectedImage}}" alt="{{selectedImage}}">
+        {{else}}
+            <img src="images/Lion.jpg" alt="Default Image">
+        {{/if}}
+    </div>
+</div>

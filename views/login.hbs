@@ -1,0 +1,39 @@
+{{!-- login.hbs located in /views directory --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="login-container">
+    <h1>Animal Kingdom Gallery</h1>
+    <h2>Login</h2>
+    <form id="loginForm" action="/login" method="post">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" placeholder="Username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" placeholder="Password" required>
+      </div>
+      {{#if errorMessage}}
+      <div class="error-message">{{errorMessage}}</div>
+    {{/if}}
+      <button type="submit">Login</button>
+    </form>
+    <div id="error-message"></div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').onsubmit = function(event) {
+      // You'll handle the form submission with JavaScript here.
+      // This is where you could implement frontend validation
+      // and also handle the display of error messages.
+    };
+  </script>
+</body>
+</html>
