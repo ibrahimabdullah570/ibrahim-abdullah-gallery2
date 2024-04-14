@@ -1,28 +1,83 @@
-<header>
-  <h1>Animal Kingdom</h1>
-  {{#if user}}
-  <div class="user-info">
-    <span class="username">{{user}}</span>
-    <a href="/logout" class="logout">Logout</a>
-  </div>
-  {{/if}}
-</header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Kingdom Gallery</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Animal Kingdom</h1>
+    {{#if user}}
+    <div class="user-info">
+      <span class="username">{{user}}</span>
+      <a href="/logout" class="logout">Logout</a>
+    </div>
+    {{/if}}
+  </header>
 
-<div class="gallery-container">
-    <div class="image-selection">
-        <form action="/display" method="POST">
-            {{#each images}}
-                <input type="radio" id="{{this.filename}}" name="image" value="{{this.filename}}">
-                <label for="{{this.filename}}">{{this.name}}</label>
-            {{/each}}
-            <button type="submit">Display Image</button>
-        </form>
-    </div>
-    <div class="image-display">
-        {{#if selectedImage}}
-            <img src="images/{{selectedImage}}" alt="{{selectedImage}}">
-        {{else}}
-            <img src="images/Lion.jpg" alt="Default Image">
-        {{/if}}
-    </div>
+  {{!-- Only show dropdown and image details if not the default Lion image --}}
+  {{#unless (eq selectedImage "Lion.jpg")}}
+    <div class="selection-container">
+  <label for="imageDropdown">Choose an image:</label>
+  <select id="imageDropdown" name="image" onchange="location.href='/order/' + this.value">
+    <option value="">Select an image...</option>
+    {{#each images}}
+      {{#if (eq this.status "A")}}
+        <!-- Use this.description to display the image's description as the dropdown text -->
+        <option value="{{this.filename}}" {{#if (eq this.filename selectedImage)}}selected{{/if}}>{{this.description}}</option>
+      {{/if}}
+    {{/each}}
+  </select>
 </div>
+
+    {{#if selectedImage}}
+      <div class="image-details">
+        <p>Description: {{selectedImageDescription}}</p>
+        <p>Price: ${{selectedImagePrice}}</p>
+      </div>
+    {{/if}}
+
+    <div class="image-display">
+      <img src="/images/{{selectedImage}}" alt="Selected Image">
+    </div>
+  {{/unless}}
+
+  {{!-- The default view with the Lion image --}}
+  {{#if (eq selectedImage "Lion.jpg")}}
+    <div class="image-display">
+      <img src="/images/Lion.jpg" alt="Default Image">
+    </div>
+  {{/if}}
+  
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var imageDisplay = document.querySelector('.image-display img');
+    var imageDetails = document.querySelector('.image-details');
+    
+    // Set the default image if no specific image is selected
+    var selectedImage = getQueryParam('image') || 'Lion.jpg';
+    imageDisplay.src = "/images/" + selectedImage;
+    imageDisplay.alt = selectedImage.replace('.jpg', '').replace('.jpeg', '').replace('.png', '').replace('_', ' ');
+    
+    // If the default image is Lion, we don't display details
+    if(selectedImage === 'Lion.jpg') {
+      imageDetails.style.display = 'none';
+    } else {
+      // You would need to implement the logic to fill in the details here
+      imageDetails.style.display = 'block';
+      // Dummy text for demonstration
+      imageDetails.innerHTML = '<p>Description: Example Description</p><p>Price: $999</p>';
+    }
+  });
+
+  // Helper function to extract query parameters, assuming you still need this
+  function getQueryParam(param) {
+    var result = window.location.search.match(new RegExp("(\\?|&)" + param + "(\\[\\])?=([^&]*)"));
+    return result ? result[3] : false;
+  }
+</script>
+
+</body>
+</html>

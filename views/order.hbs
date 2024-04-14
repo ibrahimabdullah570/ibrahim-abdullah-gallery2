@@ -1,0 +1,56 @@
+{{!-- order.hbs --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Image</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header>
+        <h1>Animal Kingdom - Order</h1>
+    </header>
+    
+    <main>
+        <div class="order-container">
+            <h2>{{image.description}}</h2>
+            <img src="/images/{{image.filename}}" alt="{{image.description}}">
+            <p>Price: ${{image.price}}</p>
+            <div>
+                <button id="buyButton" data-filename="{{image.filename}}">Buy</button>
+                <button id="cancelButton">Cancel</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('buyButton').addEventListener('click', function() {
+            var filename = this.getAttribute('data-filename');
+            alert('SOLD');
+            // Send the purchase request to the server
+            fetch('/purchase', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'filename=' + encodeURIComponent(filename)
+            })
+            .then(response => {
+                if(response.ok) {
+                    window.location.href = '/'; // Redirect to the gallery page
+                } else {
+                    alert('Error processing the purchase.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        document.getElementById('cancelButton').addEventListener('click', function() {
+            alert('MAYBE NEXT TIME');
+            window.location.href = '/'; // Redirect to the gallery page
+        });
+    </script>
+</body>
+</html>

@@ -1,11 +1,10 @@
-Lion.jpg
-Artic Fox.jpg
-Blue Whale.jpg
-Chameleon.jpg
-Elephant.jpg
-Giant Panda.jpeg
-Komodo Dragon.jpg
-Narwhal.jpg
-Peregrine Falcon.png
-Platypus.jpg
-Sloth.jpg
+Artic Fox.jpg,"A beautiful arctic fox",2500,A
+Blue Whale.jpg,"The largest animal",3000,S
+Chameleon.jpg,"Colorful chameleon",1500,A
+Elephant.jpg,"An enormous elephant",3500,A
+Giant Panda.jpeg,"Cute giant panda",5000,A
+Komodo Dragon.jpg,"The fearsome dragon",2300,A
+Narwhal.jpg,"The unicorn of the sea",2100,A
+Peregrine Falcon.png,"Fastest bird in the sky",4000,S
+Platypus.jpg,"A unique creature",1900,A
+Sloth.jpg,"Chilled-out sloth",1000,A

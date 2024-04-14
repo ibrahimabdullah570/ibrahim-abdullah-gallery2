@@ -19,6 +19,16 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
+
+app.engine('hbs', engine({
+  defaultLayout: 'main',
+  extname: '.hbs',
+  helpers: {
+    eq: (v1, v2) => v1 === v2
+  }
+}));
+app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'views'));
 // Session configuration
 app.use(sessions({
   cookieName: 'session',
@@ -32,15 +42,22 @@ app.use(sessions({
 
 // Helper function to read images from file
 function getImages(callback) {
-  let images = [];
-  const lr = lineReader(path.join(__dirname, 'imagelist.txt'));
-  lr.on('line', (line) => {
-    if (line.trim() !== 'Lion.jpg') {
-      images.push({ name: line.split('.')[0], filename: line });
+  fs.readFile(path.join(__dirname, 'imagelist.txt'), 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading image list:', err);
+      return callback(err, null);
     }
-  });
-  lr.on('end', () => {
-    callback(images);
+    let images = data.trim().split('\n').map(line => {
+      let [filename, description, price, status] = line.split(',');
+      // Trim the values to remove any whitespace
+      return {
+        filename: filename.trim(),
+        description: description.trim(),
+        price: parseInt(price.trim(), 10),
+        status: status.trim()
+      };
+    });
+    callback(null, images);
   });
 }
 
@@ -77,33 +94,112 @@ app.post('/login', (req, res) => {
   });
 // Logout route
 app.get('/logout', (req, res) => {
-    req.session.reset(); // This clears the session
-    res.clearCookie('session'); // This clears the cookie that holds session info
-    res.redirect('/login');
+  getImages((err, images) => {
+    if (err) {
+      console.error('Error retrieving images for reset:', err);
+      return res.status(500).send('Failed to reset images');
+    }
+    images.forEach(img => img.status = 'A');  // Reset status to 'A'
+    writeImages(images, (writeErr) => {
+      if (writeErr) {
+        console.error('Error writing reset image list:', writeErr);
+        return res.status(500).send('Failed to write reset images');
+      }
+      req.session.reset();
+      res.clearCookie('session');
+      res.redirect('/login');
+    });
   });
+});
 
-// Ensure gallery page requires login
+
 app.get('/', (req, res) => {
   if (req.session.userId) {
-    getImages((images) => {
-      res.render('gallery', { images, defaultImage: 'Lion', user: req.session.userId });
+    getImages((err, images) => {
+      if (err) {
+        return res.status(500).send('Error retrieving images');
+      }
+      // Pass all images to the view, not just available ones
+      res.render('gallery', { images: images, user: req.session.userId });
     });
   } else {
     res.redirect('/login');
   }
 });
 
-// POST route to handle image selection
+      // Route for displaying the order page
+app.get('/order/:filename', (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  const filename = req.params.filename;
+  getImages((err, images) => {
+    if (err) {
+      return res.status(500).send('Error retrieving images');
+    }
+    const image = images.find(img => img.filename === filename && img.status === 'A');
+    if (image) {
+      res.render('order', { image });
+    } else {
+      res.status(404).send('Image not found or not available');
+    }
+  });
+});
+
+// Route for handling the purchase
+app.post('/purchase', (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  const filename = req.body.filename;
+  getImages((err, images) => {
+    if (err) {
+      return res.status(500).send('Error retrieving images');
+    }
+    const imageIndex = images.findIndex(img => img.filename === filename && img.status === 'A');
+    if (imageIndex !== -1) {
+      images[imageIndex].status = 'S'; // Set status to Sold
+      writeImages(images, (writeErr) => {
+        if (writeErr) {
+          return res.status(500).send('Error updating image status');
+        }
+        res.redirect('/'); // Redirect to the gallery page after purchase
+      });
+    } else {
+      res.status(404).send('Image not found or already sold');
+    }
+  });
+});
+
+// ...
+
+// Helper function to write images to file
+function writeImages(images, callback) {
+  const data = images.map(image => `${image.filename},${image.description},${image.price},${image.status}`).join('\n');
+  fs.writeFile(path.join(__dirname, 'imagelist.txt'), data, 'utf8', (err) => {
+    if (err) {
+      console.error('Error writing image list:', err);
+      return callback(err);
+    }
+    callback(null);
+  });
+}
+
 app.post('/display', (req, res) => {
   if (req.session.userId) {
-    const selectedImage = req.body.image || 'Lion.jpg';
-    getImages((images) => {
-      res.render('gallery', { images, selectedImage, user: req.session.userId });
+    const selectedImage = req.body.image; // From dropdown
+    getImages((err, images) => {
+      if (err) {
+        console.error('Error retrieving images:', err);
+        return res.status(500).send('Error retrieving images');
+      }
+      res.render('gallery', { images: images, selectedImage, user: req.session.userId });
     });
   } else {
     res.redirect('/login');
   }
 });
+
 
 // Start server
 const PORT = process.env.PORT || 3000;
